@@ -16,6 +16,17 @@ class BookingsController < ApplicationController
     total_passengers = params[:passengers].to_i
     total_amount = params[:amount].to_i
     amount = total_amount/total_passengers
+    retain = false
+    pay_using_pmd = false
+    
+    if params[:booking][:save_card] == "1"
+      retain = true
+    end
+
+    if params[:booking][:expedia] == "1"
+      pay_using_pmd = true      
+    end
+      
 
     @bookings = []
     params[:passenger].each do | passenger |
@@ -29,15 +40,15 @@ class BookingsController < ApplicationController
       @bookings.each do |booking|
         @user = booking.user
       end
-      if params[:booking][:expedia]
-        expedia_success = buy_expedia(token, total_amount)
+      if pay_using_pmd
+        expedia_success = buy_expedia(token, total_amount, retain)
         if expedia_success && expedia_success['transaction']['succeeded'] == true
           redirect_to bookings_path(bookings: @bookings), notice: "Expedia received your reservation."
         else
           redirect_to '/bookings/new?flight='+@flight.id.to_s+'&passengers='+params[:passenger].length().to_s+'&commit=Purchase+tickets', alert: "Payment method declined"
         end
       else
-        buy_success = buy_gateway(token, total_amount)
+        buy_success = buy_gateway(token, total_amount, retain)
         if buy_success && buy_success['transaction']['succeeded'] == false
           redirect_to '/bookings/new?flight='+@flight.id.to_s+'&passengers='+params[:passenger].length().to_s+'&commit=Purchase+tickets', alert: "Payment method declined"
         end
@@ -62,7 +73,7 @@ class BookingsController < ApplicationController
     params.require(:user).permit(:name, :email)
   end
 
-  def buy_gateway(token, amount)
+  def buy_gateway(token, amount, retain)
     base_uri = 'https://core.spreedly.com/v1/gateways/'
     buy_uri = base_uri + ENV['gateway_token']+'/purchase.json'
 
@@ -77,7 +88,7 @@ class BookingsController < ApplicationController
                 "payment_method_token": token,
                 "amount": amount,
                 "currency_code": "USD",
-                "retain_on_success": true
+                "retain_on_success": retain
             }
         }.to_json
     }
@@ -87,7 +98,7 @@ class BookingsController < ApplicationController
     response.parsed_response 
   end
 
-  def buy_expedia(token, amount)
+  def buy_expedia(token, amount, retain)
     base_uri = 'https://core.spreedly.com/v1/receivers/'
     buy_uri = base_uri + ENV['pmd_token']+'/deliver.json'
 
@@ -102,7 +113,8 @@ class BookingsController < ApplicationController
               "payment_method_token": token,
               "url": "https://postman-echo.com/post",
               "headers": "Content-Type: application/json",
-              "body": "{ \"flight_id\": \"params[:booking][:flight_id]\",\"amount\": amount}"
+              "body": "{ \"flight_id\": \"params[:booking][:flight_id]\",\"amount\": amount}",
+              "retain_on_success": retain
             }
         }.to_json
     }
