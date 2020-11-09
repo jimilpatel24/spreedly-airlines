@@ -1,0 +1,10 @@
+<h1>Flight Booked!</h1>
+<h2>You're going to <%=@booking.flight.arrival_airport.city%>!</h2>
+<h3>Flight Details:</h3>
+Departing from: <%= @booking.flight.departure_airport.name_with_code%> -
+<%= @booking.flight.departure_airport.city%>, <%= @booking.flight.departure_airport.country%> on <%= @booking.flight.takeoff_fmt%><br>
+Arriving at: <%= @booking.flight.arrival_airport.name_with_code%> -
+<%= @booking.flight.arrival_airport.city%>, <%= @booking.flight.arrival_airport.country%> on <%= @booking.flight.takeoff_fmt%><br>
+<h3>Passenger Details:</h3>
+<%= @booking.user.name%><br>
+<%= @booking.user.email%><br>

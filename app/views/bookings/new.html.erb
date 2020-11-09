@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://core.spreedly.com/iframe/express-2.min.js" id="express-script"></script>
+    <script type="text/javascript">
+    
+    function hide() {
+      document.getElementById("ready-to-pay").style.display = "none";
+      document.getElementById("search-btn").style.display = "block";
+    }
+
+    function calculateAmount(){
+        var qty = "<%= j(params['passengers']) %>";
+        var price = <%= @flight.price %>
+        var tot = price * parseInt(qty);
+        return tot
+    }
+
+    var enableButton = function(){
+      document.getElementById("ready-to-pay").disabled = false;
+    }
+    SpreedlyExpress.onInit(enableButton);
+
+    var handlePaymentToken = function(token, paymentMethod) {
+      document.getElementById('full_name').value = paymentMethod["full_name"]
+      document.getElementById('month').value = paymentMethod["month"]
+      document.getElementById('year').value = paymentMethod["year"]
+      document.getElementById('token').value = token
+
+      document.getElementById('payment-form').submit();
+    }
+    SpreedlyExpress.onPaymentMethod(handlePaymentToken);
+    SpreedlyExpress.onViewClose(function() {
+      hide();
+    });
+
+  </script>
+  <style>
+  #content{
+    width:500px;
+    margin:0 auto;
+  }
+  .results {
+    visibility: hidden;
+  }
+  </style>
+</head>
+<body>
+<div class="row" style="margin-top: -40px;">
+  <div class="col-md-8 col-md-offset-2" id="search-form">
+    <h1 class="text-center">Booking Information</h1>
+<%= form_with(model: @booking, local: true) do |f|%>
+  <%= f.label 'From:'%>
+  <%=f.text_field :departing, value: "#{@flight.departure_airport.city} (#{@flight.departure_airport.code})", disabled: true %>
+  <br>
+  <%= f.label 'To:'%>
+  <%=f.text_field :arriving, value: "#{@flight.arrival_airport.city} (#{@flight.arrival_airport.code})", disabled: true %><br>
+  <%= f.label 'Departing:'%>
+  <%=f.text_field :takeoff, value: @flight.takeoff_fmt, disabled: true %>
+  <%= f.label 'Arriving:'%>
+  <%=f.text_field :takeoff, value: "#{(@flight.takeoff + @flight.duration.seconds).strftime('%D at %H:%M')}", disabled: true %><br>
+  <br>
+  <h3>Passenger Information</h5><br/>
+  <% @passengers.each_with_index do | passenger, idx | %>
+  <h4>Passenger <%= idx + 1%></h4><br/>
+  <%= fields_for('passenger[]', passenger) do |uf|%>
+    <%=uf.label 'Name'%>&emsp;
+    <%= uf.text_field(:name, name: 'passenger[][name]')%><br/><br/>
+    <%=uf.label 'Email'%>&emsp;
+    <%= uf.text_field(:email, name: 'passenger[][email]')%>
+  <% end%><br><br>
+  <% end %>
+  <div class="form-check">
+    <%= f.check_box :save_card, {} %>&emsp;
+    <%= f.label "Save my card for future purchases" %> 
+  </div>
+  <div class="form-check">
+    <%= f.check_box :expedia, {} %>&emsp;
+    <%= f.label "Purchase with Expedia" %> 
+  </div>
+  <%= f.hidden_field(:flight_id, value: params[:flight])%>
+  <%=f.submit id: 'search-btn', class: 'form-control btn btn-primary btn-block search-btn' %>
+  <br>
+  <div class="form-group">
+<div class="col-sm-offset-3 col-sm-5">
+  <button type="button" id="ready-to-pay" onclick="SpreedlyExpress.openView();" class="btn btn-primary btn-block" disabled="true">Checkout</button>
+</div>
+  </div>
+  <form class="form-horizontal" role="form" action="/result.html" method="GET" id="payment-form">
+  <div class="col-sm-offset-3 col-sm-5">
+    <input  class="results" type="text" id="full_name" name="full_name" required>
+    <input  class="results" type="text" id="month" name="month" required>
+    <input  class="results" type="text" id="year" name="year" required>
+    <input  class="results" type="text" id="token" name="payment_method_token" required>
+    <input  class="results" type="text" id="amount" name="amount" required>
+    <input  class="results" type="text" id="passengers" name="passengers" required>
+    <input  class="results" type="text" id="total" name="total" required>
+  </div>
+</form>
+</div>
+</div>
+<script>
+document.getElementById("search-btn").style.display = "none";
+function calculateTotal(){
+        var qty = "<%= j(params['passengers']) %>";
+        var price = <%= @flight.price %>
+        var tot = price * parseInt(qty);
+        document.getElementById('total').value = "$"+tot;
+        return amount
+    }
+    calculateTotal();
+var environmentKey= "ATBOwRk49UT4u5WlWVarYrK1MMD"
+
+    var options = {
+    company_name: "Spreedly Airlines",
+    sidebar_top_description: "Flying you since 2001",
+    sidebar_bottom_description: "Total price",
+    amount: document.getElementById('total').value
+    }
+SpreedlyExpress.init(environmentKey,options);
+document.getElementById('amount').value = calculateAmount()
+document.getElementById('passengers').value = <%= j(params['passengers']) %>
+</script>
+</body>
+</html>
+<%end%>

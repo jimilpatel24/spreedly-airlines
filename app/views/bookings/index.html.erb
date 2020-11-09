@@ -1,0 +1,62 @@
+<script>
+function showProcessedTransactions() {
+  var x = document.getElementById("pt");
+  if (x.style.display === "none") {
+    x.style.display = "block";
+  } else {
+    x.style.display = "none";
+  }
+}
+</script>
+<div class="row" style="margin-top: -40px;">
+  <div class="col-md-8 col-md-offset-2" id="search-form">
+<h1>Flight Booked!</h1>
+<h2>You're going to <%=@bookings[0].flight.arrival_airport.city%>!</h2>
+<h3>Flight Details:</h3>
+<br/>
+<strong>Departing from:&emsp;</strong><%= @bookings[0].flight.departure_airport.name_with_code%> -
+<%= @bookings[0].flight.departure_airport.city%>, <%= @bookings[0].flight.departure_airport.country%> on <%= @bookings[0].flight.takeoff_fmt%><br>
+<strong>Arriving at:&emsp;</strong><%= @bookings[0].flight.arrival_airport.name_with_code%> -
+<%= @bookings[0].flight.arrival_airport.city%>, <%= @bookings[0].flight.arrival_airport.country%> on <%= @bookings[0].flight.takeoff_fmt%><br>
+<h3>Passenger Details:</h3>
+<% @bookings.each_with_index do |booking, idx|%>
+<br>
+<h4><strong>Passenger <%= idx + 1 %></strong></h4>
+<h5>Name: <%= booking.user.name%></h5>
+<h5>Email: <%= booking.user.email%></h5>
+<% end %>
+<br>
+<br>
+<button onclick="showProcessedTransactions()">View Processed Transactions</button>
+
+<br>
+<br>
+<div id="pt">
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Destination</th>
+            <th scope="col">Price</th>
+            <th scope="col">Purchased On</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% @bookings.each do |booking| %>
+            <tr>                
+                <td><%= booking.user.name %></td>
+                <td><%= booking.user.email %></td>
+                <td><%= booking.flight.arrival_airport.name_with_code %></td>
+                <td><%= "$"+booking.purchased_amount.to_s %></td>
+                <td><%= booking.created_at.to_s %></td>
+            </tr>
+        <% end %>
+    </tbody>
+</table>
+</div>
+</div>
+</div>
+<script>
+document.getElementById("pt").style.display = "none";
+</script>

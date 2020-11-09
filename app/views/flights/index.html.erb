@@ -1,0 +1,79 @@
+<div class="col-md-10 col-md-offset-1" id="search-form">
+<h1 class="text-center">Search for flights: </h1><br/>
+<%= form_with(model: @flight, url: :search_flights, method: "get", local: true) do |f|%>
+  
+  <div class="row">
+  <div class="col-md-4 col-md-offset-2 text-center">
+  <%= f.label(:departure_airport_id, 'Departing From')%>:
+  <%= f.collection_select(:departure_airport_id, Airport.all, :id, :name_with_code)%><br>
+  </div>
+
+  <div class="col-md-4 text-center">
+  <%= f.label(:arrival_airport_id, 'Arriving At')%>:
+  <br/>
+  <%= f.collection_select(:arrival_airport_id, Airport.all, :id, :name_with_code)%><br>
+  </div>
+  </div>
+
+  <div class="row">
+  <div class="col-md-4 col-md-offset-2 text-center">
+  <%= f.label(:takeoff, 'Date')%>
+  <%= f.collection_select(:takeoff, Flight.find_by_sql("SELECT DISTINCT CAST(takeoff AS DATE) FROM flights"), :takeoff, :takeoff_day)%>
+  <br>
+  </div>
+
+  <div class="col-md-4 text-center">
+  <%= f.label(:passengers)%>
+  <% pass = params[:flight].nil? ? 1 : params[:flight][:passengers] %>
+  <%= f.select(:passengers, options_for_select([['1'], ['2'], ['3'], ['4']], "#{pass}"))%><br>
+  </div>
+  </div>
+
+  <div class="row">
+  <div class="col-md-4 col-md-offset-4">
+  <%= f.submit 'Check Flights', id: 'search-btn', class: 'form-control btn btn-primary btn-block search-btn' %>
+  </div>
+  </div>
+<%end %>
+
+
+<br>
+<% unless @flights.empty? %>
+  <%= form_with(url: :new_booking, method: 'get', local: true) do |f| %>
+    <div class="row" id="flights-form">
+    <div class="col-md-8 col-md-offset-2" style="margin-top:100px;">
+    <strong><%= f.label 'Please Select a Flight:'%><br>
+    </strong>
+    <table class="table table-striped table-bordered">
+      <thead>
+      <tr>
+        <th></th>
+        <th>Flight ID</th>
+        <th>Duration</th>
+        <th>Departure</th>
+        <th>Destination</th>
+        <th>Date/Time</th>
+        <th>Price</th>
+      </tr>
+      </thead>
+      <tbody>
+      <%@flights.each do |flight|%>
+        <tr>
+          <td><%= f.radio_button(:flight, flight.id)%></td>
+          <td><%= flight.id%></td>
+          <td><%= flight.duration_fmt %></td>
+          <td><strong><%= flight.departure_airport.name %></strong></td>
+          <td><strong><%= flight.arrival_airport.name %></strong></td>
+          <td><%= flight.takeoff_fmt %></td>
+          <td><%= "$"+flight.price.to_s %></td>
+        </tr>
+    <%end %>
+    </tbody>
+  </table>
+  <%= f.hidden_field(:passengers, value: params[:flight][:passengers])%>
+  <%= f.submit 'Purchase tickets', id: 'search-btn', class: 'form-control btn btn-primary btn-block search-btn' %>
+</div>
+</div>
+<% end %>
+<% end %>
+</div>
